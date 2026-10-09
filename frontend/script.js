@@ -34,7 +34,7 @@ form.addEventListener("submit", async function(event) {
 
     try {
 
-        const response = await fetch("/predict", ...
+        const response = await fetch("/predict",
             {
                 method: "POST",
 
