@@ -1,17 +1,23 @@
-from fastapi import FastAPI
-from pydantic import BaseModel, Field
-from fastapi.middleware.cors import CORSMiddleware
-from app.predictor import predict_salary
+from pathlib import Path
 
+from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
+
+from app.predictor import predict_salary
 
 app = FastAPI()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+# Locate the existing frontend folder
+BASE_DIR = Path(__file__).resolve().parent.parent
+FRONTEND_DIR = BASE_DIR / "frontend"
+
+# Serve CSS and JavaScript files
+app.mount(
+    "/static",
+    StaticFiles(directory=str(FRONTEND_DIR)),
+    name="static",
 )
 
 
@@ -26,23 +32,18 @@ class Employee(BaseModel):
 
 @app.get("/")
 def home():
-    return {
-        "message": "employees salary prediction api is running"
-    }
+    return FileResponse(str(FRONTEND_DIR / "index.html"))
 
 
 @app.post("/predict")
 def predict_employee_salary(employee: Employee):
-
     salary = predict_salary(
         employee.age,
         employee.experience,
         employee.education,
         employee.department,
         employee.city,
-        employee.previous_salary
+        employee.previous_salary,
     )
 
-    return {
-        "predicted_salary": salary
-    }
+    return {"predicted_salary": salary}
